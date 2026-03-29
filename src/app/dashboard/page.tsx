@@ -120,6 +120,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {meals.map((meal: any) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`} className="premium-card p-5 group flex justify-between items-center active:scale-[0.98] transition-all">
                   <div className="flex gap-4 items-center">
@@ -130,6 +131,7 @@ export default async function DashboardPage() {
                     </div>
                     <div>
                       <h4 className="font-black text-slate-800 uppercase text-xs tracking-wider">{t(meal.category)}</h4>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       <p className="text-sm text-slate-500 font-medium truncate max-w-[160px]">{meal.title_summary || meal.items.map((i: any) => i.food_name).join(', ')}</p>
                     </div>
                   </div>

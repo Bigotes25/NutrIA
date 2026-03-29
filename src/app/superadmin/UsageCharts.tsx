@@ -2,7 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 
-export function UsageCharts({ data }: { data: any[] }) {
+export function UsageCharts({ data }: { data: unknown[] }) {
   return (
     <div className="space-y-12">
       {/* Cost Chart */}

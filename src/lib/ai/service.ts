@@ -148,12 +148,13 @@ export async function processImageMeal(imageBase64: string, userId: string): Pro
       return parsedData;
     }
     throw new Error('No parsed data');
-  } catch (e: any) {
-    await logAiUsage(userId, 'VISION', model, 'API_ERROR', 0, 0, Date.now() - start, e.message);
+  } catch (e: unknown) {
+    await logAiUsage(userId, 'VISION', model, 'API_ERROR', 0, 0, Date.now() - start, (e as Error).message);
     return null;
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateCoachTip(userId: string, profile: any, metrics: any): Promise<string | null> {
   const start = Date.now();
   const model = "gpt-4o-mini";

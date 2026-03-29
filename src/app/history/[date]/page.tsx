@@ -86,6 +86,7 @@ export default async function DayHistoryPage({ params }: { params: Promise<{ dat
             </div>
           ) : (
             <div className="space-y-4">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {meals.map((meal: any) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`} className="premium-card p-5 group flex justify-between items-center active:scale-[0.98] transition-all">
                   <div className="flex gap-4 items-center">
