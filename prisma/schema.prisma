@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                      String   @id @default(uuid())
+  email                   String   @unique
+  password_hash           String
+  role                    String   @default("USER") // USER, SUPERADMIN
+  is_active               Boolean  @default(true)
+  last_login_at           DateTime?
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  profile                 UserProfile?
+  weight_logs             WeightLog[]
+  meal_entries            MealEntry[]
+  daily_metrics           DailyMetric[]
+  ai_usage_logs           AiUsageLog[]
+  admin_activity_logs     AdminActivityLog[]
+  notification_preferences NotificationPreference?
+  favorite_meals          FavoriteMeal[]
+}
+
+model UserProfile {
+  id                      String   @id @default(uuid())
+  user_id                 String   @unique
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  name                    String?
+  sex                     String?  // 'M', 'F', 'OTHER'
+  age                     Int?
+  height_cm               Float?
+  current_weight_kg       Float?
+  goal_weight_kg          Float?
+  activity_level          String?  // SEDENTARY, LIGHT, MODERATE, ACTIVE
+  target_loss_per_week    Float?
+  
+  daily_calorie_target    Int?
+  daily_protein_target    Int?
+  daily_carbs_target      Int?
+  daily_fats_target       Int?
+  daily_water_target_ml   Int?
+  daily_steps_target      Int?
+  
+  updated_at              DateTime @updatedAt
+}
+
+model WeightLog {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  log_date                DateTime @default(now())
+  weight_kg               Float
+}
+
+model MealEntry {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  entry_date              DateTime @default(now())
+  category                String   // BREAKFAST, LUNCH, DINNER, SNACK, OTHER
+  source_type             String   // MANUAL, AUDIO, PHOTO, HYBRID
+  title_summary           String?
+  notes                   String?
+  
+  total_calories          Int      @default(0)
+  total_protein           Int      @default(0)
+  total_carbs             Int      @default(0)
+  total_fats              Int      @default(0)
+  
+  ai_confidence           Float?   
+  
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  items                   MealItem[]
+  media                   MealMedia[]
+}
+
+model MealItem {
+  id                      String   @id @default(uuid())
+  meal_entry_id           String
+  meal_entry              MealEntry @relation(fields: [meal_entry_id], references: [id], onDelete: Cascade)
+  
+  food_name               String
+  quantity_value          Float
+  quantity_unit           String
+  estimated_grams         Int?
+  
+  calories                Int      @default(0)
+  protein                 Int      @default(0)
+  carbs                   Int      @default(0)
+  fats                    Int      @default(0)
+}
+
+model MealMedia {
+  id                      String   @id @default(uuid())
+  meal_entry_id           String
+  meal_entry              MealEntry @relation(fields: [meal_entry_id], references: [id], onDelete: Cascade)
+  
+  media_type              String   // AUDIO, IMAGE
+  file_url                String
+  transcription_text      String?  
+}
+
+model DailyMetric {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  metric_date             DateTime 
+  
+  total_calories_consumed Int      @default(0)
+  water_ml                Int      @default(0)
+  steps                   Int      @default(0)
+  exercise_calories       Int      @default(0)
+  
+  updated_at              DateTime @updatedAt
+
+  @@unique([user_id, metric_date])
+}
+
+model AiUsageLog {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  request_type            String   // TRANSCRIPTION, VISION, TEXT_COACH
+  provider                String
+  model_used              String
+  
+  prompt_tokens           Int      @default(0)
+  completion_tokens       Int      @default(0)
+  estimated_cost_usd      Float    @default(0)
+  latency_ms              Int      @default(0)
+  
+  status                  String   // SUCCESS, VALIDATION_ERROR, API_ERROR
+  error_message           String?  
+  
+  created_at              DateTime @default(now())
+}
+
+model AdminActivityLog {
+  id                      String   @id @default(uuid())
+  admin_id                String
+  admin                   User     @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+  
+  target_user_id          String?
+  action_type             String   // CHANGE_ROLE, BLOCK_USER, VIEW_DATA
+  details                 String?  
+  
+  created_at              DateTime @default(now())
+}
+
+model NotificationPreference {
+  id                            String   @id @default(uuid())
+  user_id                       String   @unique
+  user                          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  meal_reminders_enabled        Boolean  @default(true)
+  weigh_in_reminder_enabled     Boolean  @default(true)
+  motivational_messages_enabled Boolean  @default(true)
+}
+
+model FavoriteMeal {
+  id                      String   @id @default(uuid())
+  user_id                 String
+  user                    User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  title                   String   // Ej. "Mi desayuno avena"
+  category                String?  // BREAKFAST, etc.
+  
+  total_calories          Int      @default(0)
+  total_protein           Int      @default(0)
+  total_carbs             Int      @default(0)
+  total_fats              Int      @default(0)
+  
+  items                   FavoriteMealItem[]
+  
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+}
+
+model FavoriteMealItem {
+  id                      String   @id @default(uuid())
+  favorite_meal_id       String
+  favorite_meal          FavoriteMeal @relation(fields: [favorite_meal_id], references: [id], onDelete: Cascade)
+  
+  food_name               String
+  quantity_value          Float
+  quantity_unit           String
+  
+  calories                Int      @default(0)
+  protein                 Int      @default(0)
+  carbs                   Int      @default(0)
+  fats                    Int      @default(0)
+}
