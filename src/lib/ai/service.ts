@@ -3,9 +3,22 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiInstance: OpenAI | null = null;
+
+const getOpenAI = () => {
+  if (openaiInstance) return openaiInstance;
+  
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn("⚠️ [NutrIA] OPENAI_API_KEY not found. AI features will be disabled.");
+    }
+    return null;
+  }
+  
+  openaiInstance = new OpenAI({ apiKey });
+  return openaiInstance;
+};
 
 export const MealResponseSchema = z.object({
   title_summary: z.string().describe("Un resumen corto de la comida, ej. 'Desayuno con tostadas'"),
@@ -53,7 +66,10 @@ export async function processTextMeal(text: string, userId: string): Promise<Par
   const start = Date.now();
   const model = "gpt-4o-mini"; // Using structured miniature for speed and reasonable accuracy
   try {
-    const response = await openai.chat.completions.create({
+    const client = getOpenAI();
+    if (!client) throw new Error("OpenAI client not initialized");
+
+    const response = await client.chat.completions.create({
       model,
       messages: [
         { role: "system", content: "Eres un analista experto en nutrición inteligente. El usuario te describirá lo que acaba de comer. Analízalo.\nDevuelve ÚNICAMENTE un JSON estructurado con: title_summary (string), total_calories (numero), total_protein (numero), total_carbs (numero), total_fats (numero), items (array de objetos con food_name, quantity_value, quantity_unit, estimated_grams (numero o null), calories, protein, carbs, fats). No escribas markdown, solo un JSON estricto. TODO EL CONTENIDO DEL JSON DEBE ESTAR EN ESPAÑOL." },
@@ -80,10 +96,13 @@ export async function processTextMeal(text: string, userId: string): Promise<Par
 export async function processAudioTranscription(fileBuffer: Buffer, fileName: string, userId: string): Promise<ParsedMeal | null> {
   const start = Date.now();
   try {
+    const client = getOpenAI();
+    if (!client) throw new Error("OpenAI client not initialized");
+
     const file = await toFile(fileBuffer, fileName, { type: 'audio/webm' });
 
     // Step 1: Transcribe via Whisper
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await client.audio.transcriptions.create({
       file: file,
       model: 'whisper-1',
       language: 'es'
@@ -105,7 +124,10 @@ export async function processImageMeal(imageBase64: string, userId: string): Pro
   const start = Date.now();
   const model = "gpt-4o"; // Requires full vision capability
   try {
-    const response = await openai.chat.completions.create({
+    const client = getOpenAI();
+    if (!client) throw new Error("OpenAI client not initialized");
+
+    const response = await client.chat.completions.create({
       model,
       messages: [
         { role: "system", content: "Eres un nutricionista experto. Analiza la imagen y estima porciones, alimentos, macros y calorías.\nDevuelve ÚNICAMENTE un JSON estructurado con: title_summary (string), total_calories (numero), total_protein (numero), total_carbs (numero), total_fats (numero), items (array de objetos con food_name, quantity_value, quantity_unit, estimated_grams (numero o null), calories, protein, carbs, fats). No uses markdown. TODO EL CONTENIDO DEL JSON DEBE ESTAR EN ESPAÑOL." },
@@ -146,7 +168,10 @@ export async function generateCoachTip(userId: string, profile: any, metrics: an
     
     Genera UN SOLO CONSEJO corto (máximo 20 palabras) y potente para hoy en español. Sé específico y motivador.`;
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAI();
+    if (!client) throw new Error("OpenAI client not initialized");
+
+    const response = await client.chat.completions.create({
       model,
       messages: [
         { role: "system", content: "Eres NutrIA, una nutria experta en nutrición inteligente. Hablas en español, de forma cercana, un poco juguetona pero muy profesional y motivadora." },
