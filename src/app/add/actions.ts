@@ -54,7 +54,7 @@ export async function saveAsFavorite(mealEntryId: string, customTitle?: string) 
   return favorite
 }
 
-export async function useFavoriteMeal(favoriteId: string, category?: string) {
+export async function applyFavoriteMeal(favoriteId: string, category?: string) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) throw new Error("Unauthorized")
 

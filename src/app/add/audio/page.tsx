@@ -78,7 +78,7 @@ export default function AudioAddPage() {
          </div>
          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-3">¿Qué has comido?</h1>
          <p className="text-slate-500 font-medium mb-12 px-4">
-           Toca para empezar y descríbelo con naturalidad. Ej: "Me comí dos huevos fritos con un trozo de pan y un café."
+           Toca para empezar y descríbelo con naturalidad. Ej: &quot;Me comí dos huevos fritos con un trozo de pan y un café.&quot;
          </p>
 
          {!isProcessing ? (

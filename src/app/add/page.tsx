@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Camera, Mic, Type, ArrowLeft, Star, Plus } from 'lucide-react'
-import { getFavoriteMeals, useFavoriteMeal } from './actions'
+import { getFavoriteMeals, applyFavoriteMeal } from './actions'
 import { redirect } from 'next/navigation'
 
 export default async function AddSelectorPage() {
@@ -10,7 +10,7 @@ export default async function AddSelectorPage() {
     'use server'
     const favoriteId = formData.get('favoriteId') as string
     if (favoriteId) {
-      await useFavoriteMeal(favoriteId)
+      await applyFavoriteMeal(favoriteId)
       redirect('/dashboard')
     }
   }

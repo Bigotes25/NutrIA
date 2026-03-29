@@ -48,7 +48,7 @@ export function CoachWidget() {
           </div>
         ) : tip ? (
           <p className="text-white font-bold text-xl leading-relaxed italic tracking-tight">
-            "{tip}"
+            &quot;{tip}&quot;
           </p>
         ) : (
           <div className="space-y-4">
