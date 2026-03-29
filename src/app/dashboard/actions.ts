@@ -10,7 +10,7 @@ export async function addWater(amount_ml: number) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return
 
-  let today = new Date()
+  const today = new Date()
   today.setUTCHours(0,0,0,0) 
 
   await prisma.dailyMetric.upsert({

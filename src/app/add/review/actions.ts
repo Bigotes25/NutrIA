@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function saveAIMeal(data: any, isFavorite: boolean = false) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) throw new Error("Unauthorized")
@@ -48,7 +49,7 @@ export async function saveAIMeal(data: any, isFavorite: boolean = false) {
     })
   }
 
-  let today = new Date()
+  const today = new Date()
   today.setUTCHours(0,0,0,0) 
 
   await prisma.dailyMetric.upsert({

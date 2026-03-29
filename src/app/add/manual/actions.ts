@@ -47,7 +47,7 @@ export async function saveManualMeal(formData: FormData) {
     }
   })
 
-  let today = new Date()
+  const today = new Date()
   today.setUTCHours(0,0,0,0) 
 
   await prisma.dailyMetric.upsert({
