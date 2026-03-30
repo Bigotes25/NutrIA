@@ -24,15 +24,15 @@ export default function LoginPage() {
     const res = await signIn('credentials', {
       redirect: false,
       email,
-      password
+      password,
+      callbackUrl: '/dashboard'
     })
 
     if (res?.error) {
       setError('Credenciales incorrectas')
       setLoading(false)
     } else {
-      router.push('/dashboard') 
-      router.refresh()
+      window.location.assign(res?.url ?? '/dashboard')
     }
   }
 
