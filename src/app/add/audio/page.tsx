@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mic, Square, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Mic, Square, Upload } from 'lucide-react'
 
 const extensionByMimeType: Record<string, string> = {
   'audio/webm': 'webm',
@@ -39,9 +39,18 @@ const getPreferredAudioMimeType = () => {
 export default function AudioAddPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [prefersNativeCapture, setPrefersNativeCapture] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const router = useRouter()
+
+  useEffect(() => {
+    const hasMediaRecorder = typeof MediaRecorder !== 'undefined'
+    const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent)
+
+    setPrefersNativeCapture(!hasMediaRecorder || isIOS)
+  }, [])
 
   const startRecording = async () => {
     try {
@@ -102,6 +111,18 @@ export default function AudioAddPage() {
     }
   }
 
+  const handleNativeAudioChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    setIsProcessing(true)
+    await processAudio(file)
+    event.target.value = ''
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex flex-col pt-12 items-center text-center">
       <div className="w-full mb-8 flex items-center justify-between">
@@ -119,13 +140,43 @@ export default function AudioAddPage() {
            Toca para empezar y descríbelo con naturalidad. Ej: &quot;Me comí dos huevos fritos con un trozo de pan y un café.&quot;
          </p>
 
+         <input
+           ref={fileInputRef}
+           type="file"
+           accept="audio/*"
+           capture="user"
+           className="hidden"
+           onChange={handleNativeAudioChange}
+         />
+
          {!isProcessing ? (
-           <button 
-             onClick={isRecording ? stopRecording : startRecording}
-             className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-xl ${isRecording ? 'bg-red-500 hover:bg-red-400 animate-pulse' : 'bg-slate-900 hover:bg-slate-800 hover:scale-105 active:scale-95'}`}
-           >
-             {isRecording ? <Square className="w-10 h-10 text-white fill-white" /> : <Mic className="w-12 h-12 text-white" />}
-           </button>
+           <div className="flex w-full flex-col items-center gap-4">
+             <button 
+               onClick={
+                 prefersNativeCapture
+                   ? () => fileInputRef.current?.click()
+                   : isRecording
+                   ? stopRecording
+                   : startRecording
+               }
+               className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-xl ${isRecording ? 'bg-red-500 hover:bg-red-400 animate-pulse' : 'bg-slate-900 hover:bg-slate-800 hover:scale-105 active:scale-95'}`}
+             >
+               {prefersNativeCapture ? (
+                 <Upload className="w-12 h-12 text-white" />
+               ) : isRecording ? (
+                 <Square className="w-10 h-10 text-white fill-white" />
+               ) : (
+                 <Mic className="w-12 h-12 text-white" />
+               )}
+             </button>
+             <p className="max-w-xs text-xs font-bold text-slate-400">
+               {prefersNativeCapture
+                 ? 'En iPhone usamos la captura nativa para evitar fallos de Safari.'
+                 : isRecording
+                 ? 'Pulsa otra vez para detener la grabacion.'
+                 : 'Pulsa para grabar tu comida.'}
+             </p>
+           </div>
          ) : (
            <div className="flex flex-col items-center text-emerald-600">
              <Loader2 className="w-12 h-12 animate-spin mb-4" />
