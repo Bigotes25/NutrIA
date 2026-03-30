@@ -39,7 +39,7 @@ const getPreferredAudioMimeType = () => {
 export default function AudioAddPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [prefersNativeCapture, setPrefersNativeCapture] = useState(false)
+  const [showManualUpload, setShowManualUpload] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -49,7 +49,7 @@ export default function AudioAddPage() {
     const hasMediaRecorder = typeof MediaRecorder !== 'undefined'
     const isIOS = /iPad|iPhone|iPod/.test(window.navigator.userAgent)
 
-    setPrefersNativeCapture(!hasMediaRecorder || isIOS)
+    setShowManualUpload(isIOS || !hasMediaRecorder)
   }, [])
 
   const startRecording = async () => {
@@ -144,40 +144,39 @@ export default function AudioAddPage() {
            ref={fileInputRef}
            type="file"
            accept="audio/mp4,audio/aac,audio/m4a,audio/webm,audio/wav,audio/mpeg,audio/*"
-           capture
-           className="hidden"
-           onChange={handleNativeAudioChange}
-         />
+            className="hidden"
+            onChange={handleNativeAudioChange}
+          />
 
          {!isProcessing ? (
            <div className="flex w-full flex-col items-center gap-4">
-             <button 
-               onClick={
-                 prefersNativeCapture
-                   ? () => fileInputRef.current?.click()
-                   : isRecording
-                   ? stopRecording
-                   : startRecording
-               }
-               className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-xl ${isRecording ? 'bg-red-500 hover:bg-red-400 animate-pulse' : 'bg-slate-900 hover:bg-slate-800 hover:scale-105 active:scale-95'}`}
-             >
-               {prefersNativeCapture ? (
-                 <Upload className="w-12 h-12 text-white" />
-               ) : isRecording ? (
-                 <Square className="w-10 h-10 text-white fill-white" />
-               ) : (
-                 <Mic className="w-12 h-12 text-white" />
-               )}
-             </button>
-             <p className="max-w-xs text-xs font-bold text-slate-400">
-               {prefersNativeCapture
-                 ? 'En iPhone abrimos la captura de audio nativa para evitar fallos de Safari.'
-                 : isRecording
-                 ? 'Pulsa otra vez para detener la grabacion.'
-                 : 'Pulsa para grabar tu comida.'}
-             </p>
-           </div>
-         ) : (
+              <button 
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`w-32 h-32 rounded-full flex items-center justify-center transition-all shadow-xl ${isRecording ? 'bg-red-500 hover:bg-red-400 animate-pulse' : 'bg-slate-900 hover:bg-slate-800 hover:scale-105 active:scale-95'}`}
+              >
+                {isRecording ? (
+                  <Square className="w-10 h-10 text-white fill-white" />
+                ) : (
+                  <Mic className="w-12 h-12 text-white" />
+                )}
+              </button>
+              <p className="max-w-xs text-xs font-bold text-slate-400">
+                {isRecording
+                  ? 'Pulsa otra vez para detener la grabacion.'
+                  : 'Pulsa para grabar tu comida.'}
+              </p>
+              {showManualUpload ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-500 shadow-sm"
+                >
+                  <Upload className="h-4 w-4" />
+                  Subir audio ya grabado
+                </button>
+              ) : null}
+            </div>
+          ) : (
            <div className="flex flex-col items-center text-emerald-600">
              <Loader2 className="w-12 h-12 animate-spin mb-4" />
              <p className="font-bold animate-pulse">Analizando tu comida...</p>
