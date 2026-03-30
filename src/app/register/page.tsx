@@ -2,7 +2,23 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { signup } from './actions'
 
-export default function RegisterPage() {
+type RegisterPageProps = {
+  searchParams: Promise<{
+    error?: string
+  }>
+}
+
+const errorMessages: Record<string, string> = {
+  invalid_data: 'Introduce un email valido y una contrasena de al menos 6 caracteres.',
+  email_taken: 'Ese email ya esta registrado.',
+  db_connection: 'No hemos podido conectar con la base de datos. Revisa Vercel y vuelve a intentarlo.',
+  server_error: 'No hemos podido crear tu cuenta. Intentalo de nuevo en unos segundos.'
+}
+
+export default async function RegisterPage({ searchParams }: RegisterPageProps) {
+  const { error } = await searchParams
+  const errorMessage = error ? errorMessages[error] ?? errorMessages.server_error : null
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white text-slate-900 px-8 pb-32">
       <div className="w-full max-w-md space-y-12">
@@ -24,6 +40,11 @@ export default function RegisterPage() {
         </div>
 
         <form className="space-y-6">
+          {errorMessage ? (
+            <div className="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700" aria-live="polite">
+              {errorMessage}
+            </div>
+          ) : null}
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="email">Tu Email</label>
             <input 
