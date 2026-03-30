@@ -7,7 +7,30 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { format } from 'date-fns'
 
-export async function updateMealEntry(id: string, data: any) {
+type MealItemInput = {
+  food_name: string
+  quantity_value: number
+  quantity_unit: string
+  estimated_grams?: number | null
+  calories: number
+  protein: number
+  carbs: number
+  fats: number
+}
+
+type MealUpdateInput = {
+  category: string
+  parsed: {
+    title_summary: string
+    total_calories: number
+    total_protein: number
+    total_carbs: number
+    total_fats: number
+    items: MealItemInput[]
+  }
+}
+
+export async function updateMealEntry(id: string, data: MealUpdateInput) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) throw new Error("Unauthorized")
 
@@ -32,7 +55,7 @@ export async function updateMealEntry(id: string, data: any) {
         total_carbs: data.parsed.total_carbs,
         total_fats: data.parsed.total_fats,
         items: {
-          create: data.parsed.items.map((i: any) => ({
+          create: data.parsed.items.map((i) => ({
             food_name: i.food_name,
             quantity_value: i.quantity_value,
             quantity_unit: i.quantity_unit,

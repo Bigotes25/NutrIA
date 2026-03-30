@@ -27,7 +27,7 @@ export default function AudioAddPage() {
       }
       mediaRecorderRef.current.start()
       setIsRecording(true)
-    } catch (err) {
+    } catch {
       alert('Necesitamos acceso al micrófono para grabarte.')
     }
   }
@@ -58,7 +58,7 @@ export default function AudioAddPage() {
         alert('Hubo un error interpretando el audio.')
         setIsProcessing(false)
       }
-    } catch (e) {
+    } catch {
       alert('Error de red.')
       setIsProcessing(false)
     }
