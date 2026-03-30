@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError('')
     
     const formData = new FormData(e.currentTarget)
-    const email = formData.get('email') as string
+    const email = String(formData.get('email') as string).trim().toLowerCase()
     const password = formData.get('password') as string
 
     const res = await signIn('credentials', {

@@ -11,7 +11,18 @@ export default withAuth(
       signIn: "/login",
     },
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        const isAuthorized = !!token;
+
+        console.log("Middleware auth check", {
+          path: req.nextUrl.pathname,
+          isAuthorized,
+          tokenId: (token?.id as string | undefined) ?? null,
+          tokenSub: token?.sub ?? null,
+        });
+
+        return isAuthorized;
+      },
     },
   }
 );

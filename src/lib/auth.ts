@@ -15,14 +15,22 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("Auth authorize rejected: missing credentials");
           return null;
         }
 
+        const email = credentials.email.trim().toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
+          where: { email }
         });
 
         if (!user || !user.is_active) {
+          console.log("Auth authorize rejected: user missing or inactive", {
+            email,
+            foundUser: !!user,
+            isActive: user?.is_active ?? null,
+          });
           return null;
         }
 
@@ -32,12 +40,19 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          console.log("Auth authorize rejected: invalid password", { email });
           return null;
         }
 
         await prisma.user.update({
           where: { id: user.id },
           data: { last_login_at: new Date() }
+        });
+
+        console.log("Auth authorize success", {
+          email,
+          userId: user.id,
+          role: user.role,
         });
 
         return {
@@ -56,6 +71,10 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        console.log("Auth jwt issued", {
+          tokenId: token.id,
+          role: token.role,
+        });
       }
       return token;
     },
@@ -64,6 +83,13 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
       }
+
+      console.log("Auth session resolved", {
+        hasSessionUser: !!session.user,
+        sessionUserId: session.user?.id ?? null,
+        tokenId: (token.id as string | undefined) ?? null,
+      });
+
       return session;
     }
   },
