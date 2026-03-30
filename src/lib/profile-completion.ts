@@ -10,7 +10,21 @@ type NullableProfileFields = {
   daily_steps_target?: number | null
 }
 
-export function hasCompletedProfile(profile: NullableProfileFields | null | undefined) {
+type CompletedProfileFields = NullableProfileFields & {
+  age: number
+  height_cm: number
+  current_weight_kg: number
+  goal_weight_kg: number
+  activity_level: string
+  target_loss_per_week: number
+  daily_calorie_target: number
+  daily_water_target_ml: number
+  daily_steps_target: number
+}
+
+export function hasCompletedProfile<T extends NullableProfileFields>(
+  profile: T | null | undefined
+): profile is T & CompletedProfileFields {
   if (!profile) {
     return false
   }
