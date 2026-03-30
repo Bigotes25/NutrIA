@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { Prisma } from '@prisma/client'
 import { generateCoachTip } from '@/lib/ai/service'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -24,7 +25,7 @@ function getUtcDayEnd(start: Date) {
   return end
 }
 
-async function syncExerciseCaloriesForDate(tx: typeof prisma, userId: string, dayStart: Date) {
+async function syncExerciseCaloriesForDate(tx: Prisma.TransactionClient, userId: string, dayStart: Date) {
   const dayEnd = getUtcDayEnd(dayStart)
   const aggregate = await tx.workout.aggregate({
     where: {
