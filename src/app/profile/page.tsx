@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { User, Target, Zap, Droplets, LogOut, BarChart2, Edit3, ChevronRight, Shield } from 'lucide-react'
 import LogoutButton from '@/components/LogoutButton'
 import { t } from '@/lib/i18n'
+import { hasCompletedProfile } from '@/lib/profile-completion'
 
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions)
@@ -20,7 +21,7 @@ export default async function ProfilePage() {
     where: { user_id: session.user.id }
   })
 
-  if (!profile) redirect('/onboarding')
+  if (!hasCompletedProfile(profile)) redirect('/onboarding')
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
@@ -46,6 +47,11 @@ export default async function ProfilePage() {
           <div className="flex justify-between items-center mb-5 px-1">
             <h3 className="font-black text-xl text-slate-900 italic tracking-tight underline decoration-emerald-500/30 decoration-4 underline-offset-4">Mis Objetivos</h3>
             <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg uppercase tracking-wider">En Marcha</span>
+          </div>
+          <div className="mb-4 rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <p className="text-sm font-medium text-slate-600">
+              Estas metas alimentan los calculos de dashboard, historial y actividad. Si cambias peso, nivel de actividad o ritmo objetivo, la app recalcula tambien tu balance diario.
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="premium-card p-6 space-y-3">

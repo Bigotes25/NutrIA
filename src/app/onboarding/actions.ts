@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { calculateProfileTargets } from '@/lib/profile-targets'
 
 export async function completeOnboarding(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -23,48 +24,14 @@ export async function completeOnboarding(formData: FormData) {
   const activity_level = formData.get('activity_level') as string
   const target_loss_per_week = parseFloat(formData.get('target_loss_per_week') as string)
 
-  // Calcs - Mifflin-St Jeor BMR
-  let bmr = 10 * current_weight_kg + 6.25 * height_cm - 5 * age
-  if (sex === 'M') {
-    bmr += 5
-  } else if (sex === 'F') {
-    bmr -= 161
-  } else {
-    bmr -= 78
-  }
-
-  // Activity multipliers
-  const multipliers: Record<string, number> = {
-    SEDENTARY: 1.2,
-    LIGHT: 1.375,
-    MODERATE: 1.55,
-    ACTIVE: 1.725
-  }
-
-  const tdee = bmr * (multipliers[activity_level] || 1.2)
-
-  // Deficit (1kg fat = ~7700 kcal -> ~1100 kcal deficit per day for 1kg/week)
-  const daily_deficit = target_loss_per_week * 1000
-  let target_cals = Math.round(tdee - daily_deficit)
-  
-  // Floor calories to 1200 for extreme safety
-  if (target_cals < 1200) target_cals = 1200
-
-  // Macros calculation
-  // Protein: ~2g per kg of body weight
-  const protein_target = Math.round(current_weight_kg * 2.2) 
-  const protein_cals = protein_target * 4
-  
-  // Fats: ~25% of total calories
-  const fats_target_cals = Math.round(target_cals * 0.25)
-  const fats_target = Math.round(fats_target_cals / 9)
-  
-  // Carbs: rest
-  const carbs_target_cals = target_cals - protein_cals - fats_target_cals
-  const carbs_target = Math.round(Math.max(0, carbs_target_cals) / 4)
-
-  const steps_target = 8000
-  const water_ml_target = Math.round(current_weight_kg * 35)
+  const targets = calculateProfileTargets({
+    sex,
+    age,
+    heightCm: height_cm,
+    currentWeightKg: current_weight_kg,
+    activityLevel: activity_level,
+    targetLossPerWeek: target_loss_per_week,
+  })
 
   // Save to user profile & weight log
   await prisma.userProfile.upsert({
@@ -72,23 +39,23 @@ export async function completeOnboarding(formData: FormData) {
     update: {
       name, sex, age, height_cm, current_weight_kg, goal_weight_kg, 
       activity_level, target_loss_per_week,
-      daily_calorie_target: target_cals,
-      daily_protein_target: protein_target,
-      daily_carbs_target: carbs_target,
-      daily_fats_target: fats_target,
-      daily_water_target_ml: water_ml_target,
-      daily_steps_target: steps_target,
+      daily_calorie_target: targets.dailyCalories,
+      daily_protein_target: targets.proteinTarget,
+      daily_carbs_target: targets.carbsTarget,
+      daily_fats_target: targets.fatsTarget,
+      daily_water_target_ml: targets.waterTargetMl,
+      daily_steps_target: targets.stepsTarget,
     },
     create: {
       user_id: userId,
       name, sex, age, height_cm, current_weight_kg, goal_weight_kg, 
       activity_level, target_loss_per_week,
-      daily_calorie_target: target_cals,
-      daily_protein_target: protein_target,
-      daily_carbs_target: carbs_target,
-      daily_fats_target: fats_target,
-      daily_water_target_ml: water_ml_target,
-      daily_steps_target: steps_target,
+      daily_calorie_target: targets.dailyCalories,
+      daily_protein_target: targets.proteinTarget,
+      daily_carbs_target: targets.carbsTarget,
+      daily_fats_target: targets.fatsTarget,
+      daily_water_target_ml: targets.waterTargetMl,
+      daily_steps_target: targets.stepsTarget,
     }
   })
 

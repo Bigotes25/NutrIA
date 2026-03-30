@@ -31,6 +31,10 @@ export default function EditProfileForm({ initialData }: EditProfileFormProps) {
           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">Configura tus datos físicos y metas</p>
         </div>
 
+        <div className="mb-8 rounded-3xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 shadow-sm">
+          Lo que ajustes aqui se usa para calcular tu balance diario, tus objetivos nutricionales y la estimacion de progreso en actividad e historial.
+        </div>
+
         <form action={updateProfile} onSubmit={() => setLoading(true)} className="space-y-8">
           {/* Basicos */}
           <div className="premium-card p-8 space-y-6">
@@ -113,7 +117,7 @@ export default function EditProfileForm({ initialData }: EditProfileFormProps) {
 
              {mode === 'auto' ? (
                <div className="text-center p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 shadow-inner">
-                  <p className="text-xs font-bold text-emerald-700 leading-relaxed uppercase tracking-tighter">La app recalculará tus objetivos de energía y agua basándose en el algoritmo Mifflin-St Jeor.</p>
+                  <p className="text-xs font-bold text-emerald-700 leading-relaxed uppercase tracking-tighter">La app recalculara tus objetivos de energia, agua y macros para que dashboard, historial y actividad sigan alineados.</p>
                </div>
              ) : (
                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">

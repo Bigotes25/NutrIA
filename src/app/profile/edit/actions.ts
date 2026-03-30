@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { calculateMacroTargets, calculateProfileTargets } from '@/lib/profile-targets'
 
 export async function updateProfile(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -24,44 +25,35 @@ export async function updateProfile(formData: FormData) {
   const isAuto = formData.get('calc_mode') === 'auto'
   let target_cals = parseInt(formData.get('manual_calories') as string)
   let target_water = parseInt(formData.get('manual_water') as string)
+  const autoTargets = calculateProfileTargets({
+    sex,
+    age,
+    heightCm: height_cm,
+    currentWeightKg: current_weight_kg,
+    activityLevel: activity_level,
+    targetLossPerWeek: target_loss_per_week,
+  })
 
   if (isAuto) {
-    // Recalculate if in auto mode
-    let bmr = 10 * current_weight_kg + 6.25 * height_cm - 5 * age
-    if (sex === 'M') bmr += 5
-    else if (sex === 'F') bmr -= 161
-    else bmr -= 78
-
-    const multipliers: Record<string, number> = {
-      SEDENTARY: 1.2,
-      LIGHT: 1.375,
-      MODERATE: 1.55,
-      ACTIVE: 1.725
-    }
-
-    const tdee = bmr * (multipliers[activity_level] || 1.2)
-    const daily_deficit = target_loss_per_week * 1000
-    target_cals = Math.round(tdee - daily_deficit)
-    if (target_cals < 1200) target_cals = 1200
-
-    target_water = Math.round(current_weight_kg * 35)
+    target_cals = autoTargets.dailyCalories
+    target_water = autoTargets.waterTargetMl
   }
 
-  // Basic macro split if recalculated or changed
-  const protein_target = Math.round(current_weight_kg * 2.2) 
-  const fats_target = Math.round((target_cals * 0.25) / 9)
-  const carbs_target = Math.round((target_cals - (protein_target * 4) - (fats_target * 9)) / 4)
+  const safeCalories = Number.isFinite(target_cals) ? Math.max(1200, target_cals) : autoTargets.dailyCalories
+  const safeWater = Number.isFinite(target_water) ? Math.max(0, target_water) : autoTargets.waterTargetMl
+  const macros = calculateMacroTargets(current_weight_kg, safeCalories)
 
   await prisma.userProfile.update({
     where: { user_id: userId },
     data: {
       name, sex, age, height_cm, current_weight_kg, goal_weight_kg,
       activity_level, target_loss_per_week,
-      daily_calorie_target: target_cals,
-      daily_water_target_ml: target_water,
-      daily_protein_target: protein_target,
-      daily_carbs_target: carbs_target,
-      daily_fats_target: fats_target,
+      daily_calorie_target: safeCalories,
+      daily_water_target_ml: safeWater,
+      daily_protein_target: macros.proteinTarget,
+      daily_carbs_target: macros.carbsTarget,
+      daily_fats_target: macros.fatsTarget,
+      daily_steps_target: autoTargets.stepsTarget,
     }
   })
 

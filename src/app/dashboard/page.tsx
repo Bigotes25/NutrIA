@@ -4,11 +4,12 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import prisma from '@/lib/prisma'
 import Image from 'next/image'
-import { Plus, BarChart2, Scale, User, Shield } from 'lucide-react'
+import { ChevronRight, Plus, Scale, Shield } from 'lucide-react'
 import { WaterWidget } from '@/components/WaterWidget'
 import { WeightWidget } from '@/components/WeightWidget'
 import { CoachWidget } from '@/components/CoachWidget'
 import { t } from '@/lib/i18n'
+import { hasCompletedProfile } from '@/lib/profile-completion'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -21,10 +22,11 @@ export default async function DashboardPage() {
     prisma.userProfile.findUnique({ where: { user_id: userId } })
   ])
 
-  if (!profile) redirect('/onboarding')
+  if (!hasCompletedProfile(profile)) redirect('/onboarding')
 
   const today = new Date()
   today.setUTCHours(0,0,0,0)
+  const todayKey = today.toISOString().slice(0, 10)
   
   let metrics = await prisma.dailyMetric.findUnique({
     where: { user_id_metric_date: { user_id: userId, metric_date: today } }
@@ -102,6 +104,31 @@ export default async function DashboardPage() {
         </div>
 
         <CoachWidget />
+
+        <Link href={`/history/${todayKey}`} className="premium-card p-6 flex items-center justify-between gap-4 group active:scale-[0.98] transition-all">
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Actividad</p>
+            <p className="text-3xl font-black text-slate-900 tabular-nums">
+              {Math.max(0, metrics.total_calories_consumed - metrics.exercise_calories)}
+              <span className="ml-1 text-xs font-bold uppercase tracking-tighter text-slate-400">kcal netas</span>
+            </p>
+            <div className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <span>{metrics.exercise_calories} quemadas</span>
+              <div className="h-1 w-1 rounded-full bg-slate-300" />
+              <span>Ver detalle</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="rounded-3xl bg-orange-50 px-4 py-3 text-right">
+              <p className="text-[9px] font-black uppercase tracking-widest text-orange-500">Hoy</p>
+              <p className="text-lg font-black tabular-nums text-orange-600">{metrics.exercise_calories}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-100 p-3 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all">
+              <ChevronRight className="h-5 w-5" />
+            </div>
+          </div>
+        </Link>
         
         <div className="grid grid-cols-1 gap-6">
           <WeightWidget currentWeight={profile.current_weight_kg} />
@@ -120,8 +147,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {meals.map((meal: any) => (
+              {meals.map((meal) => (
                 <Link key={meal.id} href={`/meal/${meal.id}`} className="premium-card p-5 group flex justify-between items-center active:scale-[0.98] transition-all">
                   <div className="flex gap-4 items-center">
                     <div className="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl group-hover:bg-emerald-50 transition-colors">
@@ -131,8 +157,7 @@ export default async function DashboardPage() {
                     </div>
                     <div>
                       <h4 className="font-black text-slate-800 uppercase text-xs tracking-wider">{t(meal.category)}</h4>
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      <p className="text-sm text-slate-500 font-medium truncate max-w-[160px]">{meal.title_summary || meal.items.map((i: any) => i.food_name).join(', ')}</p>
+                      <p className="text-sm text-slate-500 font-medium truncate max-w-[160px]">{meal.title_summary || meal.items.map((item) => item.food_name).join(', ')}</p>
                     </div>
                   </div>
                   <div className="text-right">

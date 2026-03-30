@@ -11,6 +11,7 @@ interface Metric {
   metric_date: Date
   total_calories_consumed: number
   water_ml: number
+  exercise_calories?: number
 }
 
 export function HistoryClient({ initialMetrics }: { initialMetrics: any[] }) {
@@ -71,7 +72,9 @@ export function HistoryClient({ initialMetrics }: { initialMetrics: any[] }) {
                     <div className="flex items-center gap-2 mt-1">
                        <span className="font-black text-emerald-600 text-sm tabular-nums">{day.total_calories_consumed} <span className="text-[10px] text-slate-400 font-bold uppercase">kcal</span></span>
                        <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Resumen diario</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
+                         {day.exercise_calories > 0 ? `${day.exercise_calories} kcal quemadas` : 'Resumen diario'}
+                       </span>
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end gap-2">
@@ -131,6 +134,7 @@ export function HistoryClient({ initialMetrics }: { initialMetrics: any[] }) {
                     <div className="absolute -bottom-1 sm:-bottom-2 flex gap-0.5">
                         <div className="w-1 h-1 bg-emerald-500 rounded-full" />
                         {metric && metric.water_ml > 0 && <div className="w-1 h-1 bg-blue-500 rounded-full" />}
+                        {metric && (metric.exercise_calories ?? 0) > 0 && <div className="w-1 h-1 bg-orange-500 rounded-full" />}
                     </div>
                   )}
                 </div>

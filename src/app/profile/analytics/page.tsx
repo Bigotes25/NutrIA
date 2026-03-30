@@ -6,6 +6,7 @@ import prisma from '@/lib/prisma'
 import { ArrowLeft } from 'lucide-react'
 import AnalyticsCharts from '@/components/AnalyticsCharts'
 import { subDays } from 'date-fns'
+import { hasCompletedProfile } from '@/lib/profile-completion'
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions)
@@ -13,6 +14,23 @@ export default async function AnalyticsPage() {
 
   const userId = session.user.id
   const thirtyDaysAgo = subDays(new Date(), 30)
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { user_id: userId },
+    select: {
+      age: true,
+      height_cm: true,
+      current_weight_kg: true,
+      goal_weight_kg: true,
+      activity_level: true,
+      target_loss_per_week: true,
+      daily_calorie_target: true,
+      daily_water_target_ml: true,
+      daily_steps_target: true,
+    }
+  })
+
+  if (!hasCompletedProfile(profile)) redirect('/onboarding')
 
   // Fetch metrics and weight logs
   const metrics = await prisma.dailyMetric.findMany({

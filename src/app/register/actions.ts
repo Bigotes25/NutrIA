@@ -31,9 +31,6 @@ export async function signup(formData: FormData) {
         email,
         password_hash,
         role: 'USER',
-        profile: {
-          create: {}
-        }
       }
     })
   } catch (error) {

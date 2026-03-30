@@ -3,10 +3,28 @@ import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { HistoryClient } from './HistoryClient'
+import { hasCompletedProfile } from '@/lib/profile-completion'
 
 export default async function HistoryPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) redirect('/login')
+
+  const profile = await prisma.userProfile.findUnique({
+    where: { user_id: session.user.id },
+    select: {
+      age: true,
+      height_cm: true,
+      current_weight_kg: true,
+      goal_weight_kg: true,
+      activity_level: true,
+      target_loss_per_week: true,
+      daily_calorie_target: true,
+      daily_water_target_ml: true,
+      daily_steps_target: true,
+    }
+  })
+
+  if (!hasCompletedProfile(profile)) redirect('/onboarding')
 
   const metrics = await prisma.dailyMetric.findMany({
     where: { user_id: session.user.id },
