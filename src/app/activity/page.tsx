@@ -23,6 +23,7 @@ export default async function ActivityPage() {
   ])
 
   if (!hasCompletedProfile(profile)) redirect('/onboarding')
+  const activeProfile = profile
 
   let workouts: Awaited<ReturnType<typeof prisma.workout.findMany>> = []
 
@@ -40,7 +41,7 @@ export default async function ActivityPage() {
     const consumed = metric.total_calories_consumed
     const burned = metric.exercise_calories
     const net = Math.max(0, consumed - burned)
-    const target = profile.daily_calorie_target || 0
+    const target = activeProfile.daily_calorie_target || 0
     const delta = target - net
 
     return {
@@ -81,8 +82,8 @@ export default async function ActivityPage() {
 
       <main className="px-6 py-8 max-w-lg mx-auto space-y-8">
         <ActivityClient
-          targetCalories={profile.daily_calorie_target || 0}
-          targetLossPerWeek={profile.target_loss_per_week || 0}
+          targetCalories={activeProfile.daily_calorie_target || 0}
+          targetLossPerWeek={activeProfile.target_loss_per_week || 0}
           days={serializedDays}
           workouts={serializedWorkouts}
         />
