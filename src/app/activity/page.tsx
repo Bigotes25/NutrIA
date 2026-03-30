@@ -23,7 +23,7 @@ export default async function ActivityPage() {
   ])
 
   if (!hasCompletedProfile(profile)) redirect('/onboarding')
-  const activeProfile = profile
+  const activeProfile = profile!
 
   let workouts: Awaited<ReturnType<typeof prisma.workout.findMany>> = []
 
