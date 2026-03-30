@@ -1,6 +1,6 @@
 import { getAiUsageStats, getUsersList } from './actions'
 import { UsageCharts } from './UsageCharts'
-import { UserTable } from './UserTable'
+import { UserManagementTable } from './UserManagementTable'
 import { Shield, ArrowLeft, TrendingUp, Zap, CheckCircle, Users } from 'lucide-react'
 import Link from 'next/link'
 
@@ -69,7 +69,7 @@ export default async function SuperadminPage() {
                 </div>
             </header>
             
-            <UserTable users={users} />
+            <UserManagementTable users={users} />
         </section>
 
         <div className="pt-8 opacity-50 text-center">

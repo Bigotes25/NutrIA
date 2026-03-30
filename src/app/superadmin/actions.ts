@@ -1,9 +1,9 @@
 'use server'
 
+import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
 async function checkSuperadmin() {
@@ -103,6 +103,7 @@ export async function getUsersList() {
     email: u.email,
     name: u.profile?.name || 'Pro User',
     role: u.role,
+    isActive: u.is_active,
     createdAt: u.created_at,
     stats: {
       meals: u._count.meal_entries,
@@ -132,6 +133,142 @@ export async function updateUserRole(targetUserId: string, newRole: string) {
   await prisma.user.update({
     where: { id: targetUserId },
     data: { role: newRole }
+  })
+
+  revalidatePath('/superadmin')
+}
+
+export async function createUser(input: {
+  email: string
+  password: string
+  name?: string
+  role?: string
+  isActive?: boolean
+}) {
+  await checkSuperadmin()
+
+  const email = input.email.trim().toLowerCase()
+  const password = input.password.trim()
+  const name = input.name?.trim() || null
+  const role = input.role === 'SUPERADMIN' ? 'SUPERADMIN' : 'USER'
+  const isActive = input.isActive ?? true
+
+  if (!email || !password) {
+    throw new Error('Email y contraseña son obligatorios')
+  }
+
+  if (password.length < 6) {
+    throw new Error('La contraseña debe tener al menos 6 caracteres')
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email }
+  })
+
+  if (existingUser) {
+    throw new Error('Ya existe un usuario con ese email')
+  }
+
+  const password_hash = await bcrypt.hash(password, 10)
+
+  await prisma.user.create({
+    data: {
+      email,
+      password_hash,
+      role,
+      is_active: isActive,
+      profile: {
+        create: {
+          name
+        }
+      }
+    }
+  })
+
+  revalidatePath('/superadmin')
+}
+
+export async function updateUser(input: {
+  userId: string
+  email: string
+  name?: string
+  role: string
+  isActive: boolean
+  password?: string
+}) {
+  const admin = await checkSuperadmin()
+
+  const userId = input.userId
+  const email = input.email.trim().toLowerCase()
+  const name = input.name?.trim() || null
+  const role = input.role === 'SUPERADMIN' ? 'SUPERADMIN' : 'USER'
+  const isActive = input.isActive
+  const password = input.password?.trim()
+
+  if (!email) {
+    throw new Error('El email es obligatorio')
+  }
+
+  if (userId === admin.id && role !== 'SUPERADMIN') {
+    throw new Error('No puedes quitarte el rol de Superadmin a ti mismo')
+  }
+
+  if (userId === admin.id && !isActive) {
+    throw new Error('No puedes desactivar tu propia cuenta')
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { profile: true }
+  })
+
+  if (!existingUser) {
+    throw new Error('Usuario no encontrado')
+  }
+
+  const emailOwner = await prisma.user.findUnique({
+    where: { email }
+  })
+
+  if (emailOwner && emailOwner.id !== userId) {
+    throw new Error('Ese email ya está en uso por otro usuario')
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      email,
+      role,
+      is_active: isActive,
+      ...(password
+        ? { password_hash: await bcrypt.hash(password, 10) }
+        : {}),
+      profile: existingUser.profile
+        ? {
+            update: {
+              name
+            }
+          }
+        : {
+            create: {
+              name
+            }
+          }
+    }
+  })
+
+  revalidatePath('/superadmin')
+}
+
+export async function deleteUser(targetUserId: string) {
+  const admin = await checkSuperadmin()
+
+  if (targetUserId === admin.id) {
+    throw new Error('No puedes borrar tu propia cuenta')
+  }
+
+  await prisma.user.delete({
+    where: { id: targetUserId }
   })
 
   revalidatePath('/superadmin')
