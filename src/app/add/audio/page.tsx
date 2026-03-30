@@ -143,8 +143,8 @@ export default function AudioAddPage() {
          <input
            ref={fileInputRef}
            type="file"
-           accept="audio/*"
-           capture="user"
+           accept="audio/mp4,audio/aac,audio/m4a,audio/webm,audio/wav,audio/mpeg,audio/*"
+           capture
            className="hidden"
            onChange={handleNativeAudioChange}
          />
@@ -171,7 +171,7 @@ export default function AudioAddPage() {
              </button>
              <p className="max-w-xs text-xs font-bold text-slate-400">
                {prefersNativeCapture
-                 ? 'En iPhone usamos la captura nativa para evitar fallos de Safari.'
+                 ? 'En iPhone abrimos la captura de audio nativa para evitar fallos de Safari.'
                  : isRecording
                  ? 'Pulsa otra vez para detener la grabacion.'
                  : 'Pulsa para grabar tu comida.'}
