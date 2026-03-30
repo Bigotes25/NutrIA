@@ -5,6 +5,18 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Mic, Square, Loader2 } from 'lucide-react'
 
+const extensionByMimeType: Record<string, string> = {
+  'audio/webm': 'webm',
+  'audio/mp4': 'mp4',
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/wav': 'wav',
+  'audio/x-wav': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/aac': 'aac',
+  'audio/m4a': 'm4a',
+}
+
 export default function AudioAddPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -20,7 +32,8 @@ export default function AudioAddPage() {
         if (e.data.size > 0) chunksRef.current.push(e.data)
       }
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' })
+        const mimeType = mediaRecorderRef.current?.mimeType || chunksRef.current[0]?.type || 'audio/webm'
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType })
         chunksRef.current = [] 
         stream.getTracks().forEach(track => track.stop())
         await processAudio(audioBlob)
@@ -42,7 +55,9 @@ export default function AudioAddPage() {
 
   const processAudio = async (blob: Blob) => {
     const formData = new FormData()
-    formData.append('audio', blob, 'recording.webm')
+    const mimeType = blob.type || mediaRecorderRef.current?.mimeType || 'audio/webm'
+    const extension = extensionByMimeType[mimeType] || 'webm'
+    formData.append('audio', blob, `recording.${extension}`)
 
     try {
       const res = await fetch('/api/ai/audio', { method: 'POST', body: formData })
@@ -55,7 +70,8 @@ export default function AudioAddPage() {
         }))
         router.push('/add/review')
       } else {
-        alert('Hubo un error interpretando el audio.')
+        const platformHint = mimeType === 'audio/mp4' ? ' Prueba de nuevo; ya hemos ajustado compatibilidad para iPhone.' : ''
+        alert(`Hubo un error interpretando el audio.${platformHint}`)
         setIsProcessing(false)
       }
     } catch {

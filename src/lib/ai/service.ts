@@ -93,13 +93,18 @@ export async function processTextMeal(text: string, userId: string): Promise<Par
   }
 }
 
-export async function processAudioTranscription(fileBuffer: Buffer, fileName: string, userId: string): Promise<ParsedMeal | null> {
+export async function processAudioTranscription(
+  fileBuffer: Buffer,
+  fileName: string,
+  mimeType: string,
+  userId: string
+): Promise<ParsedMeal | null> {
   const start = Date.now();
   try {
     const client = getOpenAI();
     if (!client) throw new Error("OpenAI client not initialized");
 
-    const file = await toFile(fileBuffer, fileName, { type: 'audio/webm' });
+    const file = await toFile(fileBuffer, fileName, { type: mimeType || 'audio/webm' });
 
     // Step 1: Transcribe via Whisper
     const transcription = await client.audio.transcriptions.create({
@@ -194,4 +199,3 @@ export async function generateCoachTip(userId: string, profile: any, metrics: an
     return null;
   }
 }
-
