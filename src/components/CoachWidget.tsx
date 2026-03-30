@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sparkles, RefreshCw } from 'lucide-react'
 import { getCoachTip } from '@/app/dashboard/actions'
 

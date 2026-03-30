@@ -6,27 +6,23 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { useState, useEffect } from 'react'
+
+type MetricPoint = {
+  metric_date: string | Date
+  total_calories_consumed: number
+}
+
+type WeightPoint = {
+  log_date: string | Date
+  weight_kg: number
+}
 
 interface AnalyticsChartsProps {
-  data: any[]
-  weightData: any[]
+  data: MetricPoint[]
+  weightData: WeightPoint[]
 }
 
 export default function AnalyticsCharts({ data, weightData }: AnalyticsChartsProps) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return <div className="space-y-12 animate-pulse">
-      <div className="h-64 bg-slate-100 rounded-3xl" />
-      <div className="h-64 bg-slate-100 rounded-3xl" />
-    </div>
-  }
-
   // Format data for Recharts
   const calorieChartData = data.map(d => ({
     name: format(new Date(d.metric_date), 'dd MMM', { locale: es }),
