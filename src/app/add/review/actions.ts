@@ -4,8 +4,32 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function saveAIMeal(data: any, isFavorite: boolean = false) {
+type MealItemInput = {
+  food_name: string
+  quantity_value: number
+  quantity_unit: string
+  estimated_grams?: number | null
+  calories: number
+  protein: number
+  carbs: number
+  fats: number
+}
+
+type MealInput = {
+  source_type?: string
+  media_url?: string | null
+  category?: string
+  parsed: {
+    title_summary: string
+    total_calories: number
+    total_protein: number
+    total_carbs: number
+    total_fats: number
+    items: MealItemInput[]
+  }
+}
+
+export async function saveAIMeal(data: MealInput, isFavorite: boolean = false) {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) throw new Error("Unauthorized")
 
@@ -24,7 +48,7 @@ export async function saveAIMeal(data: any, isFavorite: boolean = false) {
       total_fats: parsed.total_fats,
       ai_confidence: 0.9, 
       items: {
-        create: parsed.items.map((i: any) => ({
+        create: parsed.items.map((i) => ({
              food_name: i.food_name,
              quantity_value: i.quantity_value,
              quantity_unit: i.quantity_unit,
@@ -75,7 +99,7 @@ export async function saveAIMeal(data: any, isFavorite: boolean = false) {
         total_carbs: parsed.total_carbs,
         total_fats: parsed.total_fats,
         items: {
-          create: parsed.items.map((i: any) => ({
+          create: parsed.items.map((i) => ({
             food_name: i.food_name,
             quantity_value: i.quantity_value,
             quantity_unit: i.quantity_unit,

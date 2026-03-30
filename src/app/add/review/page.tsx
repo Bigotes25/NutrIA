@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Plus, Trash2, Zap, Star } from 'lucide-react'
@@ -18,10 +18,11 @@ type ParsedItem = {
   fats: number
 }
 
+type EditableField = keyof Pick<ParsedItem, 'food_name' | 'quantity_value' | 'quantity_unit' | 'estimated_grams' | 'calories' | 'protein' | 'carbs' | 'fats'>
+
 type ParsedMeal = {
   source_type: string
   media_url?: string | null
-  // We add category local UI state
   category?: string
   parsed: {
     title_summary: string
@@ -37,22 +38,22 @@ export default function ReviewAIPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
-  const [mealData, setMealData] = useState<ParsedMeal | null>(null)
+  const [mealData, setMealData] = useState<ParsedMeal | null>(() => {
+    if (typeof window === 'undefined') return null
 
-  useEffect(() => {
     const draft = sessionStorage.getItem('ai_draft_meal')
-    if (draft) {
-      const parsed = JSON.parse(draft)
-      parsed.category = 'LUNCH' // default
-      setMealData(parsed)
-    } else {
-      router.push('/add')
-    }
-  }, [router])
+    if (!draft) return null
 
-  if (!mealData) return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400 animate-pulse">Cargando borrador...</div>
+    const parsed = JSON.parse(draft) as ParsedMeal
+    return { ...parsed, category: parsed.category ?? 'LUNCH' }
+  })
 
-  const handleUpdateItem = (index: number, field: keyof ParsedItem, value: any) => {
+  if (!mealData) {
+    router.push('/add')
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center font-bold text-slate-400 animate-pulse">Cargando borrador...</div>
+  }
+
+  const handleUpdateItem = (index: number, field: EditableField, value: string | number | null) => {
     const newData = { ...mealData }
     newData.parsed.items[index] = { ...newData.parsed.items[index], [field]: value }
     recalculateTotals(newData)
@@ -88,13 +89,20 @@ export default function ReviewAIPage() {
     setMealData(data)
   }
 
+  const macroFields = useMemo(() => ([
+    { label: 'Kcal', key: 'calories' as const },
+    { label: 'Prot', key: 'protein' as const },
+    { label: 'Gras', key: 'fats' as const },
+    { label: 'Carb', key: 'carbs' as const }
+  ]), [])
+
   const handleSave = async () => {
     setLoading(true)
     try {
        await saveAIMeal(mealData, isFavorite)
        sessionStorage.removeItem('ai_draft_meal')
        router.push('/dashboard')
-    } catch(e) {
+    } catch {
        alert('Error guardando en base de datos. Intenta de nuevo.')
        setLoading(false)
     }
@@ -197,12 +205,7 @@ export default function ReviewAIPage() {
                  </div>
                  
                  <div className="grid grid-cols-4 gap-3">
-                   {[
-                     { label: 'Kcal', key: 'calories', color: 'slate' },
-                     { label: 'Prot', key: 'protein', color: 'emerald' },
-                     { label: 'Gras', key: 'fats', color: 'blue' },
-                     { label: 'Carb', key: 'carbs', color: 'amber' }
-                   ].map(macro => (
+                   {macroFields.map(macro => (
                      <div key={macro.key} className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100/50 text-center">
                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter mb-1.5">{macro.label}</p>
                        <input 
