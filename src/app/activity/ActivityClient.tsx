@@ -377,7 +377,7 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</span>
               <input
@@ -387,7 +387,7 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
                   setCreateForm((current) => ({ ...current, logDate: e.target.value }))
                   setSelectedDate(e.target.value)
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none"
+                className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
               />
             </label>
 
@@ -480,14 +480,14 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
                   <div key={workout.id} className="rounded-[1.8rem] border border-slate-100 bg-white px-5 py-4">
                     {isEditing ? (
                       <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                           <label className="space-y-1">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha</span>
                             <input
                               type="date"
                               value={editor.logDate}
                               onChange={(e) => setEditor((current) => current ? { ...current, logDate: e.target.value } : current)}
-                              className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none"
+                              className="w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
                             />
                           </label>
                           <label className="space-y-1">
