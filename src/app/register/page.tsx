@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { signup } from './actions'
+import { GoogleAuthButton } from '@/components/GoogleAuthButton'
+
+const googleAuthEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true'
 
 type RegisterPageProps = {
   searchParams: Promise<{
@@ -45,6 +48,18 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
               {errorMessage}
             </div>
           ) : null}
+
+          {googleAuthEnabled ? (
+            <div className="space-y-4">
+              <GoogleAuthButton label="Registrarme con Google" />
+              <div className="flex items-center gap-3 px-2">
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">o crea tu cuenta con email</span>
+                <div className="h-px flex-1 bg-slate-200" />
+              </div>
+            </div>
+          ) : null}
+
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1" htmlFor="email">Tu Email</label>
             <input 

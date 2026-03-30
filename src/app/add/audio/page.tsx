@@ -17,6 +17,25 @@ const extensionByMimeType: Record<string, string> = {
   'audio/m4a': 'm4a',
 }
 
+const normalizeMimeType = (mimeType: string | null | undefined) =>
+  mimeType?.split(';')[0]?.trim() || 'audio/webm'
+
+const getPreferredAudioMimeType = () => {
+  if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
+    return ''
+  }
+
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4;codecs=mp4a.40.2',
+    'audio/mp4',
+    'audio/aac',
+  ]
+
+  return candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || ''
+}
+
 export default function AudioAddPage() {
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -27,12 +46,15 @@ export default function AudioAddPage() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaRecorderRef.current = new MediaRecorder(stream)
+      const preferredMimeType = getPreferredAudioMimeType()
+      mediaRecorderRef.current = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream)
       mediaRecorderRef.current.ondataavailable = e => {
         if (e.data.size > 0) chunksRef.current.push(e.data)
       }
       mediaRecorderRef.current.onstop = async () => {
-        const mimeType = mediaRecorderRef.current?.mimeType || chunksRef.current[0]?.type || 'audio/webm'
+        const mimeType = normalizeMimeType(mediaRecorderRef.current?.mimeType || chunksRef.current[0]?.type)
         const audioBlob = new Blob(chunksRef.current, { type: mimeType })
         chunksRef.current = [] 
         stream.getTracks().forEach(track => track.stop())
@@ -55,7 +77,7 @@ export default function AudioAddPage() {
 
   const processAudio = async (blob: Blob) => {
     const formData = new FormData()
-    const mimeType = blob.type || mediaRecorderRef.current?.mimeType || 'audio/webm'
+    const mimeType = normalizeMimeType(blob.type || mediaRecorderRef.current?.mimeType)
     const extension = extensionByMimeType[mimeType] || 'webm'
     formData.append('audio', blob, `recording.${extension}`)
 

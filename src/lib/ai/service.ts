@@ -5,6 +5,9 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 
 let openaiInstance: OpenAI | null = null;
 
+const normalizeMimeType = (mimeType: string | null | undefined) =>
+  mimeType?.split(';')[0]?.trim() || 'audio/webm';
+
 const getOpenAI = () => {
   if (openaiInstance) return openaiInstance;
   
@@ -104,7 +107,7 @@ export async function processAudioTranscription(
     const client = getOpenAI();
     if (!client) throw new Error("OpenAI client not initialized");
 
-    const file = await toFile(fileBuffer, fileName, { type: mimeType || 'audio/webm' });
+    const file = await toFile(fileBuffer, fileName, { type: normalizeMimeType(mimeType) });
 
     // Step 1: Transcribe via Whisper
     const transcription = await client.audio.transcriptions.create({

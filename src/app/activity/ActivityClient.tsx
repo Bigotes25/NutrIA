@@ -338,14 +338,14 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
       )}
 
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-black text-slate-900 tracking-tight">Dia seleccionado</h2>
             <p className="text-sm font-medium text-slate-500">
               {format(new Date(`${selectedDate}T00:00:00`), "EEEE, d 'de' MMMM", { locale: es })}
             </p>
           </div>
-          <div className="rounded-[1.4rem] border border-orange-100 bg-orange-50 px-4 py-3 text-right shadow-sm">
+          <div className="self-start rounded-[1.4rem] border border-orange-100 bg-orange-50 px-4 py-3 text-right shadow-sm sm:self-auto">
             <p className="text-[9px] font-black uppercase tracking-widest text-orange-500">Netas</p>
             <p className="text-lg font-black tabular-nums text-orange-600">{selectedMetric.net}</p>
           </div>
@@ -369,28 +369,28 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
         </div>
 
         <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">Registrar entrenamiento</h4>
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
               <CalendarIcon className="w-3 h-3" />
               {createForm.logDate}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</span>
-              <input
-                type="date"
-                value={createForm.logDate}
-                onChange={(e) => {
-                  setCreateForm((current) => ({ ...current, logDate: e.target.value }))
-                  setSelectedDate(e.target.value)
-                }}
-                className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
-              />
-            </label>
+          <label className="space-y-1 block">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</span>
+            <input
+              type="date"
+              value={createForm.logDate}
+              onChange={(e) => {
+                setCreateForm((current) => ({ ...current, logDate: e.target.value }))
+                setSelectedDate(e.target.value)
+              }}
+              className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
+            />
+          </label>
 
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</span>
               <select
@@ -480,16 +480,17 @@ export function ActivityClient({ targetCalories, targetLossPerWeek, days, workou
                   <div key={workout.id} className="rounded-[1.8rem] border border-slate-100 bg-white px-5 py-4">
                     {isEditing ? (
                       <div className="space-y-3">
+                        <label className="space-y-1 block">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha</span>
+                          <input
+                            type="date"
+                            value={editor.logDate}
+                            onChange={(e) => setEditor((current) => current ? { ...current, logDate: e.target.value } : current)}
+                            className="w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
+                          />
+                        </label>
+
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <label className="space-y-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha</span>
-                            <input
-                              type="date"
-                              value={editor.logDate}
-                              onChange={(e) => setEditor((current) => current ? { ...current, logDate: e.target.value } : current)}
-                              className="w-full min-w-0 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 pr-12 text-sm font-bold text-slate-900 outline-none [color-scheme:light]"
-                            />
-                          </label>
                           <label className="space-y-1">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo</span>
                             <select

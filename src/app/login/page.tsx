@@ -6,6 +6,9 @@ import Image from 'next/image'
 import { LogIn } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { GoogleAuthButton } from '@/components/GoogleAuthButton'
+
+const googleAuthEnabled = process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === 'true'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -57,6 +60,17 @@ export default function LoginPage() {
         </div>
 
         {error && <div className="text-red-500 text-[10px] text-center font-black uppercase tracking-widest bg-red-50 rounded-2xl p-4 border border-red-100 animate-in fade-in slide-in-from-top-1">{error}</div>}
+
+        {googleAuthEnabled ? (
+          <div className="space-y-4">
+            <GoogleAuthButton label="Continuar con Google" />
+            <div className="flex items-center gap-3 px-2">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">o entra con email</span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+          </div>
+        ) : null}
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-1.5">

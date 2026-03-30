@@ -15,6 +15,9 @@ const extensionByMimeType: Record<string, string> = {
   "audio/m4a": "m4a",
 };
 
+const normalizeMimeType = (mimeType: string | null | undefined) =>
+  mimeType?.split(";")[0]?.trim() || "audio/webm";
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,7 +29,7 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const mimeType = file.type || "audio/webm";
+    const mimeType = normalizeMimeType(file.type);
     const extension = extensionByMimeType[mimeType] || "webm";
     const normalizedName = file.name?.includes(".") ? file.name : `audio.${extension}`;
 
